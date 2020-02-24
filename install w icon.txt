@@ -1,0 +1,5 @@
+pyinstaller -w -F -i seaofthievesicon_YaU_icon.ico "SoT Route Planner.py"
+
+-F one file containing exe not all the extra stuff
+-D one directory containing the exe
+-w windowd no cmd
