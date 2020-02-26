@@ -8,17 +8,11 @@ import os
 import json
 import numpy as np
 
-""" COLOUR THEME """
-
-global bg,fg,base
-bg = '#244447' # '#2d2d2d'
-fg = '#cccccc'
-base = '#1a3538'# '#111111'
 
 """ DEFAULT SETTINGS """
 
 def default_settings():
-    return '010101'
+    return '0101011'
 
 """ INITIALISE FILES """
 
@@ -100,6 +94,19 @@ def getPath(relativePath):
         return absolutePath
     except:
         close(1, relativePath) #error code 1: path is incorrect
+
+""" COLOUR THEME """
+
+global bg,fg,base
+dark = checkSettings(6)
+if dark: #use dark theme
+    bg =  '#2d2d2d'
+    fg = '#cccccc'
+    base = '#111111'
+else: #use blue theme
+    bg = '#244447'
+    fg = '#cccccc'
+    base = '#1a3538'
 
 """ WIDTH IMAGE FORMATTING """
 
@@ -188,6 +195,7 @@ class CreateToolTip(object):
 def open_settings():
     class settings_window:
         def __init__(self, master):
+            #master.iconbitmap(getPath('seaofthievesicon_YaU_icon.ico'))
             master.title('Settings')
             master.configure(background = bg)
             master.grab_set()
@@ -205,7 +213,8 @@ def open_settings():
                             ['Visit a Seapost on Route', 'Visit a seapost at some point on your voyage. Seapost will be fit in for minimal impact on journey time. WARNING: NOT RECOMENED WITH QUICK SEARCH OFF.'],
                             ['Display Nearest Fort in Nearest Port','When finding the nearest Outpost or nearest Seapost using \'Voyage to Your Nearest Port\', display your nearest Fortress.'],
                             ['Visit Islands in Order','When planning the voyage to multiple islands, The journey will be plotted in the order specified. WARNING: This will override all other settings related to planning your main voyage.'],
-                            ['Keep All Journies Open','When a voyage is loaded, all maps will remain open. If disabled, only 1 map will be open at a given time']]
+                            ['Keep All Journies Open','When a voyage is loaded, all maps will remain open. If disabled, only 1 map will be open at a given time'],
+                            ['Dark Theme','When enabled the theme is gray and black. If enabled it will use shades of blue. NOTE: only activates after RESTART']]
 
             self.cbVars = [] #list of the variables for each checkbox
             
@@ -253,6 +262,7 @@ def open_settings():
             
     master = Toplevel()
     settings_window = settings_window(master)
+    master.resizable(width=False, height=False) #don't all resize
     master.protocol('WM_DELETE_WINDOW', settings_window.closeSettings)
     master.mainloop()
 
@@ -263,10 +273,11 @@ def plan_voyage(mode):
     class plan_window:
         def __init__(self, master):
             self.master = master
+            #master.iconbitmap(getPath('seaofthievesicon_YaU_icon.ico'))
             master.title('Plan Your Voyage')
             master.configure(background = bg)
             master.grab_set()
-
+            
             islands = getIslands() #get dictionary of island names : coordinates
 
             #Sea of thieves logo as title
@@ -302,12 +313,19 @@ def plan_voyage(mode):
                 #Setup listbox with scrollbar
                 self.listSelected.config(yscrollcommand=self.scrollSelected.set)
 
-                #Buttons
-                self.add = HoverButton(master, text='add', font = ('Ariel',14), command = self.addIsland, bg=bg, fg=fg, activebackground=base, bd=0).grid(column=0, row=2, columnspan=2, sticky='EW', pady=5)
-                self.remove = HoverButton(master, text='remove', font = ('Ariel',14), command = self.removeIsland, bg=bg, fg=fg, activebackground=base, bd=0).grid(column=2, row=2, columnspan=2, sticky='EW')
-                self.load = HoverButton(master, text='load', font = ('Ariel',14), command  = self.loadPrev, bg=bg, fg=fg, activebackground=base, bd=0).grid(column=2, row=3, columnspan=2, sticky='EW', pady=5)
+                #Images for Buttons
+                self.addimg = FormatImage('add.png', 235,50)
+                self.removeimg = FormatImage('remove.png', 235,50)
+                self.loadimg = FormatImage('load.png', 235,50)
 
-            self.confirm = HoverButton(master,text = 'confirm', font = ('Ariel',14), command = self.loadVoyage, bg=bg, fg=fg, activebackground=base, bd=0).grid(column=0, row=3, columnspan=2, sticky='EW')
+                #Buttons
+                self.add = HoverButton(master, image=self.addimg, command = self.addIsland, bg=bg, fg=fg, activebackground=bg, bd=0).grid(column=0, row=2, columnspan=2, sticky='EW', pady=5)
+                self.remove = HoverButton(master, image=self.removeimg, command = self.removeIsland, bg=bg, fg=fg, activebackground=bg, bd=0).grid(column=2, row=2, columnspan=2, sticky='EW')
+                self.load = HoverButton(master, image=self.loadimg, command  = self.loadPrev, bg=bg, fg=fg, activebackground=bg, bd=0).grid(column=2, row=3, columnspan=2, sticky='EW', pady=5)
+
+            
+            self.confirmimg = FormatImage('confirm.png', 235,50)
+            self.confirm = HoverButton(master, image=self.confirmimg, command = self.loadVoyage, bg=bg, fg=fg, activebackground=bg, bd=0).grid(column=0, row=3, columnspan=2, sticky='EW', pady=5)
 
 
         def addIsland(self):
@@ -465,6 +483,7 @@ def plan_voyage(mode):
 
     master = Toplevel()
     plan_window = plan_window(master)
+    master.resizable(width=False, height=False) #don't all resize
     master.protocol('WM_DELETE_WINDOW', plan_window.closePlan)
     master.mainloop()
 
@@ -487,6 +506,7 @@ def quick_sj(port = None):
 
     saveOutpost = checkSettings(0) #check if in the settings it says to save outpost till end
     allIslands = getIslands() #get dictionary of island names : coordinates to find each islands coordinates
+    myIslands = [i for i in myIslands if i in allIslands.keys()] # remove any invalid islands if people edit the myislands file manually
 
     i1 = myIslands[0]       #current island
     x1 = allIslands[i1][0]  #current island x
@@ -500,6 +520,7 @@ def quick_sj(port = None):
 
         for island in myIslands: #loop through all islands to be visited to find nearest one
             i2 = island
+
             if i2 not in voyage and i2 != i1: #check the island hasn't already been visited
                 
                 x2 = allIslands[i2][0] #island x coordinate
@@ -610,6 +631,7 @@ def absolute_sj(port=None):
 
     saveOutpost = checkSettings(0) #check if in the settings it says to save outpost till end
     allIslands = getIslands() #get dictionary of island names : coordinates to find each islands coordinates
+    myIslands = [i for i in myIslands if i in allIslands.keys()] # remove any invalid islands if people edit the myislands file manually
 
     islandCoords = {i:allIslands[i] for i in myIslands} #get smaller dictionary only containing the islands and coords of places to visits
     routes = calc_all_routes(islandCoords, myIslands)   #get all possible routes
@@ -768,8 +790,9 @@ def create_map(route, mode):
 class main_window:
     def __init__(self, master):
         self.master = master
+        master.iconbitmap(getPath('seaofthievesicon_YaU_icon.ico'))
         master.title('Main Menu')  #window title
-        master.configure(background = bg)       #background colour
+        master.configure(background = bg)  #background colour
 
         #Alternate title
         self.logo = FormatImage('logo2.png')
@@ -781,7 +804,7 @@ class main_window:
         
         #Buttons - Hover Buttons have custom background colour when clicked
         self.multiple_islands = FormatImage('multiple_islands.png', width=width, height=height)
-        self.multipleIslands = HoverButton(master, image=self.multiple_islands, bg=bg, activebackground=base, bd=0,
+        self.multipleIslands = HoverButton(master, image=self.multiple_islands, bg=bg, activebackground=bg, bd=0,
                                            command=lambda:plan_voyage(1)).grid(column=0, row=2)
 
         self.nearest_ports = FormatImage('nearest_ports.png', width=width, height=height)
