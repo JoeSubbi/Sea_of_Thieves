@@ -790,7 +790,7 @@ def create_map(route, mode):
 class main_window:
     def __init__(self, master):
         self.master = master
-        master.iconbitmap(getPath('seaofthievesicon_YaU_icon.ico'))
+        #master.iconbitmap(getPath('seaofthievesicon_YaU_icon.ico'))
         master.title('Main Menu')  #window title
         master.configure(background = bg)  #background colour
 
